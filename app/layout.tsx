@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
-import Sidebar from "./components/sidebar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const montserrat = Montserrat({
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-body",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Notebook",
-  description: "Write your thoughts, dreams and ideas",
+  title: "Becoming Her — Luxury Wellness Journal",
+  description: "Your soft space to grow, heal, glow & manifest",
 };
 
 export default function RootLayout({
@@ -26,11 +29,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${playfairDisplay.variable} ${montserrat.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col">
-        <Sidebar />
-        <main className="flex-1 md:ml-64">{children}</main>
+      <body className="min-h-full bg-white text-[#4A3B32] antialiased">
+        {children}
       </body>
     </html>
   );

@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
 import NoteForm from './note-form';
-import styles from "./page.module.css";
+import styles from './page.module.css';
 
 function FormSkeleton() {
   return (
-    <div className={`flex flex-col gap-4 max-w-md mx-auto mt-8 animate-pulse`}>
-      <div className={`h-8 w-48 bg-[var(--primary)] rounded-full opacity-30`} />
-      <div className={`h-12 w-full bg-[var(--accent)] rounded-2xl opacity-40`} />
-      <div className={`h-40 w-full bg-[var(--accent)] rounded-2xl opacity-40`} />
-      <div className={`h-12 w-32 bg-[var(--primary)] rounded-full opacity-30 mx-auto`} />
+    <div className={`flex flex-col gap-5 max-w-lg mx-auto mt-8`}>
+      <div className={`h-10 w-40 rounded-full bg-[#FCEEF1]`} />
+      <div className={`h-14 w-full rounded-2xl bg-[#FCEEF1]`} />
+      <div className={`h-48 w-full rounded-2xl bg-[#FCEEF1]`} />
+      <div className={`h-14 w-40 rounded-full bg-[#FCEEF1] mx-auto`} />
     </div>
   );
 }

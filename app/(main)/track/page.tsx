@@ -1,12 +1,14 @@
 'use client';
 
-import { getNotes, getNotesByDate, getStreak } from '@/lib/notes';
-import styles from "./page.module.css";
+import { useMemo, useState } from 'react';
+import { getNotes, getStreak, getNotesByDate } from '@/lib/notes';
+import styles from './page.module.css';
 
 function ActivityHeatmap() {
-  const notesByDate = getNotesByDate();
+  const notesByDate = useMemo(() => getNotesByDate(), []);
   const today = new Date();
   const days = [];
+
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
@@ -18,13 +20,23 @@ function ActivityHeatmap() {
   return (
     <div className={styles.heatmap}>
       {days.map((day) => {
-        let opacity = 'opacity-20';
-        if (day.count > 0) opacity = 'opacity-70';
-        if (day.count >= 3) opacity = 'opacity-100';
+        let intensityClass = styles.level0;
+        if (day.count > 0 && day.count < 3) {
+          intensityClass = styles.level1;
+        } else if (day.count >= 3) {
+          intensityClass = styles.level2;
+        }
+
+        const cellClasses = [
+          styles.heatmapCell,
+          intensityClass,
+          day.isToday ? styles.cellToday : '',
+        ].filter(Boolean).join(' ');
+
         return (
           <div
             key={day.date}
-            className={`${styles.heatmapCell} ${opacity} ${day.isToday ? 'ring-2 ring-[var(--primary-strong)] ring-offset-2' : ''}`}
+            className={cellClasses}
             title={`${day.date}: ${day.count} note${day.count !== 1 ? 's' : ''}`}
           />
         );
@@ -34,16 +46,22 @@ function ActivityHeatmap() {
 }
 
 export default function TrackPage() {
-  const notes = getNotes();
-  const streak = getStreak();
+  const [notes] = useState(() => getNotes());
+  const streak = useMemo(() => getStreak(), []);
   const totalNotes = notes.length;
+  const recentNotes = notes.slice(0, 10);
 
   return (
     <main className={styles.main}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>
-          Your Writing Journey
-        </h1>
+        <div className={styles.header}>
+          <h1 className={styles.heading}>
+            Your Writing Journey
+          </h1>
+          <p className={styles.subtitle}>
+            Track your growth, one entry at a time
+          </p>
+        </div>
 
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
@@ -73,13 +91,13 @@ export default function TrackPage() {
           <h2 className={styles.cardHeading}>
             Recent Writings
           </h2>
-          {notes.length === 0 ? (
+          {recentNotes.length === 0 ? (
             <p className={styles.emptyState}>
               No notes yet. Start writing your first note!
             </p>
           ) : (
             <ul className={styles.noteList}>
-              {notes.slice(0, 10).map((note) => (
+              {recentNotes.map((note) => (
                 <li
                   key={note.id}
                   className={styles.noteItem}
