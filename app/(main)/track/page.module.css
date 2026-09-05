@@ -104,6 +104,33 @@
   margin-bottom: 1.5rem;
 }
 
+.cardHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.clearAllBtn {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  padding: 0.4rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid #fecaca;
+  background: transparent;
+  color: #b45309;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clearAllBtn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
 .heatmap {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
@@ -214,4 +241,49 @@
   font-weight: 400;
   color: #8C7B74;
   letter-spacing: 0.04em;
+}
+
+.noteActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.noteActionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.875rem;
+  border-radius: 9999px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.noteActionBtn:first-child {
+  background: #ffffff;
+  color: #4A3B32;
+  border: 1px solid #F5DEE3;
+}
+
+.noteActionBtn:first-child:hover {
+  background: #FCEEF1;
+  border-color: #D49AA5;
+}
+
+.noteActionDelete {
+  background: transparent;
+  color: #b45309;
+  border: 1px solid #fecaca;
+}
+
+.noteActionDelete:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #ef4444;
 }

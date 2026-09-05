@@ -1,11 +1,174 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { getNotes, getStreak, getNotesByDate } from '@/lib/notes';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import type { Note } from '@/backend/lib/notes';
 import styles from './page.module.css';
 
-function ActivityHeatmap() {
-  const notesByDate = useMemo(() => getNotesByDate(), []);
+export default function TrackPage() {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [streak, setStreak] = useState(0);
+  const [notesByDate, setNotesByDate] = useState<Map<string, Note[]>>(new Map());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/notes')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load notes');
+        return res.json();
+      })
+      .then((data: { notes: Note[]; streak: number; notesByDate: Record<string, Note[]> }) => {
+        if (cancelled) return;
+        setNotes(data.notes);
+        setStreak(data.streak);
+        setNotesByDate(new Map(Object.entries(data.notesByDate)));
+      })
+      .catch(() => {
+        if (cancelled) return;
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const handleClearAll = async () => {
+    const res = await fetch('/api/notes', { method: 'DELETE' });
+    if (res.ok) {
+      setNotes([]);
+      setStreak(0);
+      setNotesByDate(new Map());
+    }
+  };
+
+  if (loading) {
+    return (
+      <main className={styles.main}>
+        <div className={styles.content}>
+          <div className={styles.header}>
+            <h1 className={styles.heading}>Your Writing Journey</h1>
+            <p className={styles.subtitle}>Track your growth, one entry at a time</p>
+          </div>
+          <div className="flex justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#cc9b91] border-t-transparent" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className={styles.main}>
+      <div className={styles.content}>
+        <div className={styles.header}>
+          <h1 className={styles.heading}>
+            Your Writing Journey
+          </h1>
+          <p className={styles.subtitle}>
+            Track your growth, one entry at a time
+          </p>
+        </div>
+
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <div className={styles.statEmoji}>🔥</div>
+            <div className={styles.statValue}>{streak}</div>
+            <div className={styles.statLabel}>Day Streak</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statEmoji}>📝</div>
+            <div className={styles.statValue}>{notes.length}</div>
+            <div className={styles.statLabel}>Total Notes</div>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <h2 className={styles.cardHeading}>
+            Last 30 Days Activity
+          </h2>
+          <ActivityHeatmap notesByDate={notesByDate} />
+          <div className={styles.heatmapLabels}>
+            <span>30 days ago</span>
+            <span>Today</span>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardHeaderRow}>
+            <h2 className={styles.cardHeading}>
+              Recent Writings
+            </h2>
+            {notes.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                className={styles.clearAllBtn}
+                type="button"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+          {notes.length === 0 ? (
+            <p className={styles.emptyState}>
+              No notes yet. Start writing your first note!
+            </p>
+          ) : (
+            <ul className={styles.noteList}>
+              {notes.map((note) => (
+                <li
+                  key={note.id}
+                  className={styles.noteItem}
+                >
+                  <h3 className={styles.noteTitle}>
+                    {note.title}
+                  </h3>
+                  <p className={styles.noteContent}>
+                    {note.content}
+                  </p>
+                  <time className={styles.noteTime}>
+                    {new Date(note.createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </time>
+                  <div className={styles.noteActions}>
+                    <Link
+                      href={`/notes/new?edit=${note.id}`}
+                      className={styles.noteActionBtn}
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      className={`${styles.noteActionBtn} ${styles.noteActionDelete}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function ActivityHeatmap({ notesByDate }: { notesByDate: Map<string, Note[]> }) {
   const today = new Date();
   const days = [];
 
@@ -42,87 +205,5 @@ function ActivityHeatmap() {
         );
       })}
     </div>
-  );
-}
-
-export default function TrackPage() {
-  const [notes] = useState(() => getNotes());
-  const streak = useMemo(() => getStreak(), []);
-  const totalNotes = notes.length;
-  const recentNotes = notes.slice(0, 10);
-
-  return (
-    <main className={styles.main}>
-      <div className={styles.content}>
-        <div className={styles.header}>
-          <h1 className={styles.heading}>
-            Your Writing Journey
-          </h1>
-          <p className={styles.subtitle}>
-            Track your growth, one entry at a time
-          </p>
-        </div>
-
-        <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statEmoji}>🔥</div>
-            <div className={styles.statValue}>{streak}</div>
-            <div className={styles.statLabel}>Day Streak</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statEmoji}>📝</div>
-            <div className={styles.statValue}>{totalNotes}</div>
-            <div className={styles.statLabel}>Total Notes</div>
-          </div>
-        </div>
-
-        <div className={styles.card}>
-          <h2 className={styles.cardHeading}>
-            Last 30 Days Activity
-          </h2>
-          <ActivityHeatmap />
-          <div className={styles.heatmapLabels}>
-            <span>30 days ago</span>
-            <span>Today</span>
-          </div>
-        </div>
-
-        <div className={styles.card}>
-          <h2 className={styles.cardHeading}>
-            Recent Writings
-          </h2>
-          {recentNotes.length === 0 ? (
-            <p className={styles.emptyState}>
-              No notes yet. Start writing your first note!
-            </p>
-          ) : (
-            <ul className={styles.noteList}>
-              {recentNotes.map((note) => (
-                <li
-                  key={note.id}
-                  className={styles.noteItem}
-                >
-                  <h3 className={styles.noteTitle}>
-                    {note.title}
-                  </h3>
-                  <p className={styles.noteContent}>
-                    {note.content}
-                  </p>
-                  <time className={styles.noteTime}>
-                    {new Date(note.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </time>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </main>
   );
 }

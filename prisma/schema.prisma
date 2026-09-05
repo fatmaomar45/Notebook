@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  email    String    @id
+  password String
+  notes    Note[]
+  resetTokens ResetToken[]
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  createdAt BigInt
+  author    User     @relation(fields: [authorEmail], references: [email])
+  authorEmail String
+
+  @@index([authorEmail])
+}
+
+model ResetToken {
+  token     String   @id
+  email     String
+  createdAt BigInt
+  expiresAt BigInt
+  used      Boolean  @default(false)
+  user      User     @relation(fields: [email], references: [email])
+}

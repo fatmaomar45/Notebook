@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
@@ -57,13 +56,10 @@ export default function RegisterPage() {
           Becoming Her
         </h1>
         <div className="relative w-64 h-64 transition-transform duration-300 hover:scale-105 flex justify-center items-center">
-          <Image
+          <img
             src="/The_most_beautiful_pictures-removebg-preview.png"
             alt="Black Roses"
-            fill
-            sizes="256px"
-            loading="eager"
-            className="object-contain"
+            className="object-contain w-full h-full"
           />
         </div>
       </div>

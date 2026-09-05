@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
-
-interface User {
-  email: string;
-  password: string;
-}
+import prisma from '@/backend/lib/db';
+import { setLoggedInCookies } from '@/backend/lib/session';
 
 export async function POST(request: Request) {
   try {
@@ -21,23 +14,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const users: User[] = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+    const existing = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    if (users.find((u) => u.email === email)) {
+    if (existing) {
       return NextResponse.json(
         { error: 'User already exists.' },
         { status: 409 }
       );
     }
 
-    users.push({ email, password });
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    await prisma.user.create({
+      data: { email, password },
+    });
+
+    await setLoggedInCookies(email);
 
     return NextResponse.json(
       { success: true, message: 'Account created successfully!' },
       { status: 201 }
     );
-  } catch {
+  } catch (error) {
+    console.error('Register API error:', error);
     return NextResponse.json(
       { error: 'Internal server error.' },
       { status: 500 }

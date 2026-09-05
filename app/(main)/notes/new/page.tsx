@@ -28,7 +28,7 @@ export default async function NewNotePage({
           {editId ? 'Edit Note' : 'New Note'}
         </h1>
         <Suspense fallback={<FormSkeleton />}>
-          <NoteForm />
+          <NoteForm editId={editId || undefined} />
         </Suspense>
       </div>
     </main>

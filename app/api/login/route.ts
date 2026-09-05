@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
-
-interface User {
-  email: string;
-  password: string;
-}
+import prisma from '@/backend/lib/db';
+import { setLoggedInCookies } from '@/backend/lib/session';
 
 export async function POST(request: Request) {
   try {
@@ -21,22 +14,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const users: User[] = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
-    const user = users.find((u) => u.email === email && u.password === password);
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    if (!user) {
+    if (!user || user.password !== password) {
       return NextResponse.json(
         { error: 'Invalid email or password.' },
         { status: 401 }
       );
     }
 
+    await setLoggedInCookies(email);
+
     return NextResponse.json({
       success: true,
-      message: 'Login successful!',
-      user: { email: user.email },
+      user: { email },
     }, { status: 200 });
-  } catch {
+  } catch (error) {
+    console.error('Login API error:', error);
     return NextResponse.json(
       { error: 'Internal server error.' },
       { status: 500 }

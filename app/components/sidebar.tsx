@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import styles from './sidebar.module.css';
 
 const navItems = [
@@ -61,8 +61,40 @@ export default function Sidebar() {
               </Link>
             );
           })}
+          <LogoutButton />
         </nav>
       </div>
     </aside>
+  );
+}
+
+function LogoutButton() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } catch {
+      // ignore network errors; still clear client state
+    }
+    localStorage.removeItem('isLoggedIn');
+    router.replace('/login');
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      className={`${styles.sidebarLink} ${styles.logoutButton}`}
+      type="button"
+    >
+      <span className={styles.sidebarIcon}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+      </span>
+      <span className={styles.sidebarLabel}>Logout</span>
+    </button>
   );
 }

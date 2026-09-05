@@ -120,6 +120,7 @@
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+  height: 100%;
 }
 
 .sidebarHeader {
@@ -202,4 +203,29 @@
 
 .sidebarLabel {
   line-height: 1;
+}
+
+.logoutButton {
+  margin-top: auto;
+  color: #8C7B74;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  transition: all 0.3s ease;
+}
+
+.logoutButton:hover {
+  color: #c0392b;
+  background: #fde8e8;
+  transform: translateX(4px);
 }
