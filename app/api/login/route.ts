@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/backend/lib/db';
-import { setLoggedInCookies } from '@/backend/lib/session';
+import { cookies } from 'next/headers';
+
+const API_BASE_URL = process.env.PYTHON_BACKEND_URL || 'http://localhost:8000';
 
 export async function POST(request: Request) {
   try {
@@ -14,22 +15,44 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    // Call Python FastAPI backend for authentication
+    const response = await fetch(`${API_BASE_URL}/api/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Include cookies
+      body: JSON.stringify({ email, password }),
     });
 
-    if (!user || user.password !== password) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: 'Invalid email or password.' },
-        { status: 401 }
+        { error: errorData.detail || 'Invalid email or password.' },
+        { status: response.status }
       );
     }
 
-    await setLoggedInCookies(email);
+    const userData = await response.json();
+
+    // Set authentication cookie on Next.js side for additional client-side checks
+    const store = await cookies();
+    store.set('isLoggedIn', 'true', {
+      httpOnly: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60, // 1 hour
+    });
+    store.set('userEmail', Buffer.from(email).toString('base64'), {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60,
+    });
 
     return NextResponse.json({
       success: true,
-      user: { email },
+      user: userData,
     }, { status: 200 });
   } catch (error) {
     console.error('Login API error:', error);
