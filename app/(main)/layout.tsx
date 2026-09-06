@@ -1,25 +1,24 @@
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+'use client';
+
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import Sidebar from '../components/sidebar';
-import { IDLE_TIMEOUT_MS } from '@/backend/lib/session';
 import IdleTimer from '../components/idle-timer';
+import { useApp } from '@/app/context/AppContext';
 
-function isExpired(timestamp: number, ttlMs: number) {
-  return Date.now() - timestamp > ttlMs;
-}
+export default function MainLayout({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn } = useApp();
+  const pathname = usePathname();
+  const router = useRouter();
 
-export default async function MainLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get('isLoggedIn')?.value === 'true';
-  const lastActivity = Number(cookieStore.get('lastActivity')?.value || 0);
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/login?next=' + encodeURIComponent(pathname));
+    }
+  }, [isLoggedIn, pathname, router]);
 
   if (!isLoggedIn) {
-    redirect('/login?next=/');
-  }
-
-  const idleExpired = lastActivity > 0 && isExpired(lastActivity, IDLE_TIMEOUT_MS);
-  if (!lastActivity || idleExpired) {
-    redirect('/login?next=/&reason=timeout');
+    return null;
   }
 
   return (
@@ -28,7 +27,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       <main className="flex-1 pl-64 p-8 min-h-screen bg-stone-50/50">
         {children}
       </main>
-      <IdleTimer timeoutMs={IDLE_TIMEOUT_MS} />
+      <IdleTimer timeoutMs={60 * 1000} />
     </div>
   );
 }

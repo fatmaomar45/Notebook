@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useApp } from '@/app/context/AppContext';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useApp();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -23,26 +25,18 @@ export default function RegisterPage() {
       return;
     }
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        router.push('/login');
-      } else {
-        setError(data.error || 'Something went wrong');
-      }
+      register(email);
+      router.push('/login');
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError('Something went wrong.');
       console.error(err);
     } finally {
       setLoading(false);

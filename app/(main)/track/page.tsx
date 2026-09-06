@@ -1,71 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
-import type { Note } from '@/backend/lib/notes';
+import { useApp, Note } from '@/app/context/AppContext';
 import styles from './page.module.css';
 
 export default function TrackPage() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [streak, setStreak] = useState(0);
-  const [notesByDate, setNotesByDate] = useState<Map<string, Note[]>>(new Map());
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch('/api/notes')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load notes');
-        return res.json();
-      })
-      .then((data: { notes: Note[]; streak: number; notesByDate: Record<string, Note[]> }) => {
-        if (cancelled) return;
-        setNotes(data.notes);
-        setStreak(data.streak);
-        setNotesByDate(new Map(Object.entries(data.notesByDate)));
-      })
-      .catch(() => {
-        if (cancelled) return;
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { notes, streak, notesByDate, deleteNote, clearNotes } = useApp();
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/notes/${id}`, { method: 'DELETE' });
-    setNotes((prev) => prev.filter((n) => n.id !== id));
+    deleteNote(id);
   };
 
   const handleClearAll = async () => {
-    const res = await fetch('/api/notes', { method: 'DELETE' });
-    if (res.ok) {
-      setNotes([]);
-      setStreak(0);
-      setNotesByDate(new Map());
-    }
+    clearNotes();
   };
-
-  if (loading) {
-    return (
-      <main className={styles.main}>
-        <div className={styles.content}>
-          <div className={styles.header}>
-            <h1 className={styles.heading}>Your Writing Journey</h1>
-            <p className={styles.subtitle}>Track your growth, one entry at a time</p>
-          </div>
-          <div className="flex justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#cc9b91] border-t-transparent" />
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className={styles.main}>
@@ -169,16 +118,19 @@ export default function TrackPage() {
 }
 
 function ActivityHeatmap({ notesByDate }: { notesByDate: Map<string, Note[]> }) {
-  const today = new Date();
-  const days = [];
+  const today = useMemo(() => new Date(), []);
 
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const key = date.toISOString().split('T')[0];
-    const count = notesByDate.get(key)?.length || 0;
-    days.push({ date: key, count, isToday: i === 0 });
-  }
+  const days = useMemo(() => {
+    const result = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const key = date.toISOString().split('T')[0];
+      const count = notesByDate.get(key)?.length || 0;
+      result.push({ date: key, count, isToday: i === 0 });
+    }
+    return result;
+  }, [notesByDate, today]);
 
   return (
     <div className={styles.heatmap}>

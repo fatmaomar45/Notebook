@@ -1,53 +1,28 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import type { Note } from '@/backend/lib/notes';
+import { useApp } from '@/app/context/AppContext';
 import styles from './page.module.css';
 
 export default function NoteForm({ editId }: { editId?: string } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editParam = searchParams.get('edit') || editId;
+  const { notes, addNote, updateNote } = useApp();
 
+  const editNote = useMemo(() => notes.find((n) => n.id === editParam) || null, [notes, editParam]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [loadingNote, setLoadingNote] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const cancelledRef = useRef(false);
 
-  useEffect(() => {
-    if (!editParam) return;
-
-    cancelledRef.current = false;
-
-    fetch(`/api/notes/${editParam}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error('Failed to load note');
-        const note: Note = await res.json();
-        if (!cancelledRef.current) {
-          setTitle(note.title);
-          setContent(note.content);
-        }
-      })
-      .catch((err) => {
-        if (!cancelledRef.current) {
-          setError(err.message);
-        }
-      })
-      .finally(() => {
-        if (!cancelledRef.current) {
-          setLoadingNote(false);
-        }
-      });
-
-    setLoadingNote(true);
-
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, [editParam]);
+  useState(() => {
+    if (editNote) {
+      setTitle(editNote.title);
+      setContent(editNote.content);
+    }
+  });
 
   const isEditing = Boolean(editParam);
 
@@ -59,19 +34,9 @@ export default function NoteForm({ editId }: { editId?: string } = {}) {
 
     try {
       if (isEditing && editParam) {
-        const res = await fetch(`/api/notes/${editParam}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: title.trim(), content: content.trim() }),
-        });
-        if (!res.ok) throw new Error('Failed to update note');
+        updateNote(editParam, { title: title.trim(), content: content.trim() });
       } else {
-        const res = await fetch('/api/notes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: title.trim(), content: content.trim() }),
-        });
-        if (!res.ok) throw new Error('Failed to save note');
+        addNote({ title: title.trim(), content: content.trim() });
       }
       router.push('/track');
     } catch (err) {
@@ -81,7 +46,7 @@ export default function NoteForm({ editId }: { editId?: string } = {}) {
     }
   };
 
-  if (loadingNote) {
+  if (editParam && !editNote) {
     return (
       <div className={`flex flex-col gap-5 max-w-lg mx-auto mt-8`}>
         <div className={`h-10 w-40 rounded-full bg-[#FCEEF1]`} />

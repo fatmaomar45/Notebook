@@ -3,6 +3,7 @@
 import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useApp } from '@/app/context/AppContext';
 
 export default function LoginPage() {
   return (
@@ -17,6 +18,7 @@ function LoginFlow() {
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next') || '/';
   const reason = searchParams.get('reason');
+  const { login } = useApp();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,20 +35,14 @@ function LoginFlow() {
     setInfo(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Login failed.');
+      if (!email || !password) {
+        setError('Email and password are required.');
         return;
       }
-      localStorage.setItem('isLoggedIn', 'true');
+      login(email);
       router.replace(nextPath);
     } catch {
-      setError('Network error. Please try again.');
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -112,10 +108,6 @@ function LoginFlow() {
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
-            </div>
-
-            <div className="flex justify-end text-xs">
-              <a href="/forgot" className="text-[#cc9b91] hover:underline font-medium">Forgot password?</a>
             </div>
 
             <button

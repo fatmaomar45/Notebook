@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useApp } from '@/app/context/AppContext';
 import styles from './sidebar.module.css';
 
 const navItems = [
@@ -70,14 +71,10 @@ export default function Sidebar() {
 
 function LogoutButton() {
   const router = useRouter();
+  const { logout } = useApp();
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-    } catch {
-      // ignore network errors; still clear client state
-    }
-    localStorage.removeItem('isLoggedIn');
+    logout();
     router.replace('/login');
   };
 

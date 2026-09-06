@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Props {
@@ -11,28 +11,10 @@ const ACTIVITY_EVENTS = ['mousedown', 'keydown', 'scroll', 'touchstart', 'visibi
 
 export default function IdleTimer({ timeoutMs }: Props) {
   const router = useRouter();
-  const lastPingRef = useRef<number>(0);
 
   useEffect(() => {
-    const ping = async () => {
-      const now = Date.now();
-      if (now - lastPingRef.current < 30_000) return;
-      lastPingRef.current = now;
-      try {
-        const res = await fetch('/api/session/refresh', { method: 'POST' });
-        if (res.status === 401) {
-          router.replace('/login?next=/&reason=timeout');
-        }
-      } catch {
-        // ignore
-      }
-    };
-
     const checkTimeout = () => {
-      const last = Number(document.cookie
-        .split('; ')
-        .find((c) => c.startsWith('lastActivity='))
-        ?.split('=')[1] || 0);
+      const last = Number(localStorage.getItem('lastActivity') || 0);
       if (!last) return;
       if (Date.now() - last > timeoutMs) {
         router.replace('/login?next=/&reason=timeout');
@@ -40,7 +22,7 @@ export default function IdleTimer({ timeoutMs }: Props) {
     };
 
     const onActivity = () => {
-      ping();
+      localStorage.setItem('lastActivity', String(Date.now()));
       checkTimeout();
     };
 
