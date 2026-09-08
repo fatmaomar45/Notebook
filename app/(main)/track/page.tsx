@@ -2,17 +2,18 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { useApp, Note } from '@/app/context/AppContext';
+import { useApp, Note, formatLocalDate } from '@/app/context/AppContext';
 import styles from './page.module.css';
 
 export default function TrackPage() {
   const { notes, streak, notesByDate, deleteNote, clearNotes } = useApp();
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     deleteNote(id);
   };
 
-  const handleClearAll = async () => {
+  const handleClearAll = () => {
+    if (!confirm('Are you sure? All notes will be permanently deleted.')) return;
     clearNotes();
   };
 
@@ -45,11 +46,11 @@ export default function TrackPage() {
           <h2 className={styles.cardHeading}>
             Last 30 Days Activity
           </h2>
-          <ActivityHeatmap notesByDate={notesByDate} />
-          <div className={styles.heatmapLabels}>
-            <span>30 days ago</span>
-            <span>Today</span>
-          </div>
+         <ActivityHeatmap notesByDate={notesByDate} />
+         <div className={styles.heatmapLabels}>
+           <span>30 days ago</span>
+           <span>Today</span>
+         </div>
         </div>
 
         <div className={styles.card}>
@@ -125,7 +126,7 @@ function ActivityHeatmap({ notesByDate }: { notesByDate: Map<string, Note[]> }) 
     for (let i = 29; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const key = date.toISOString().split('T')[0];
+      const key = formatLocalDate(date);
       const count = notesByDate.get(key)?.length || 0;
       result.push({ date: key, count, isToday: i === 0 });
     }

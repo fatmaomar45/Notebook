@@ -1,13 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useApp } from '@/app/context/AppContext';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register } = useApp();
+  const { register, isLoggedIn } = useApp();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.replace('/');
+    }
+  }, [isLoggedIn, router]);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -16,7 +24,11 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  if (isLoggedIn) {
+    return null;
+  }
+
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -34,7 +46,7 @@ export default function RegisterPage() {
 
     try {
       register(email);
-      router.push('/login');
+      router.replace('/');
     } catch (err) {
       setError('Something went wrong.');
       console.error(err);
@@ -50,9 +62,11 @@ export default function RegisterPage() {
           Becoming Her
         </h1>
         <div className="relative w-64 h-64 transition-transform duration-300 hover:scale-105 flex justify-center items-center">
-          <img
+          <Image
             src="/The_most_beautiful_pictures-removebg-preview.png"
             alt="Black Roses"
+            fill
+            sizes="(max-width: 768px) 20rem, 28rem"
             className="object-contain w-full h-full"
           />
         </div>

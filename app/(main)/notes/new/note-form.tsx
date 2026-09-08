@@ -12,21 +12,14 @@ export default function NoteForm({ editId }: { editId?: string } = {}) {
   const { notes, addNote, updateNote } = useApp();
 
   const editNote = useMemo(() => notes.find((n) => n.id === editParam) || null, [notes, editParam]);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState(() => editNote?.title ?? '');
+  const [content, setContent] = useState(() => editNote?.content ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useState(() => {
-    if (editNote) {
-      setTitle(editNote.title);
-      setContent(editNote.content);
-    }
-  });
-
   const isEditing = Boolean(editParam);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
     setSubmitting(true);

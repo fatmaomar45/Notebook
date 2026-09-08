@@ -1,6 +1,7 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useApp } from '@/app/context/AppContext';
@@ -18,7 +19,13 @@ function LoginFlow() {
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next') || '/';
   const reason = searchParams.get('reason');
-  const { login } = useApp();
+  const { login, isLoggedIn } = useApp();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.replace(nextPath);
+    }
+  }, [isLoggedIn, router, nextPath]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,7 +36,11 @@ function LoginFlow() {
   );
   const [loading, setLoading] = useState(false);
 
-  const submitCredentials = async (e: React.FormEvent) => {
+  if (isLoggedIn) {
+    return null;
+  }
+
+  const submitCredentials = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setInfo(null);
@@ -53,7 +64,7 @@ function LoginFlow() {
       <div className="hidden md:flex md:w-1/2 bg-[#cc9b91] flex-col justify-center items-center p-12">
         <h1 className="text-white text-6xl font-serif mb-12 italic tracking-wide">Becoming Her</h1>
         <div className="relative w-[28rem] h-[28rem] transition-transform duration-300 hover:scale-105 flex justify-center items-center">
-          <img src="/The_most_beautiful_pictures-removebg-preview.png" alt="Black Roses" className="object-contain w-full h-full" />
+          <Image src="/The_most_beautiful_pictures-removebg-preview.png" alt="Black Roses" fill sizes="(max-width: 768px) 20rem, 28rem" className="object-contain w-full h-full" />
         </div>
       </div>
 

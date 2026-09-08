@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useApp } from '@/app/context/AppContext';
 import styles from './sidebar.module.css';
 
@@ -39,33 +40,52 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.sidebarContent}>
-        <div className={styles.sidebarHeader}>
-          <Link href="/" className={styles.sidebarBrand}>
-            <span>B</span>
-          </Link>
+    <>
+      <button
+        className={styles.menuButtonMobile}
+        onClick={() => setIsOpen(true)}
+        aria-label="Open menu"
+      >
+        <span className={styles.menuIcon}></span>
+        <span className={styles.menuIcon}></span>
+        <span className={styles.menuIcon}></span>
+      </button>
+
+      <div
+        className={`${styles.overlay} ${isOpen ? styles.overlayOpen : ''}`}
+        onClick={() => setIsOpen(false)}
+      />
+
+      <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
+        <div className={styles.sidebarContent}>
+          <div className={styles.sidebarHeader}>
+            <Link href="/" className={styles.sidebarBrand} onClick={() => setIsOpen(false)}>
+              <span>B</span>
+            </Link>
+          </div>
+          <nav className={styles.sidebarNav}>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ''}`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span className={styles.sidebarIcon}>{item.icon}</span>
+                  <span className={styles.sidebarLabel}>{item.label}</span>
+                </Link>
+              );
+            })}
+            <LogoutButton />
+          </nav>
         </div>
-        <nav className={styles.sidebarNav}>
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ''}`}
-              >
-                <span className={styles.sidebarIcon}>{item.icon}</span>
-                <span className={styles.sidebarLabel}>{item.label}</span>
-              </Link>
-            );
-          })}
-          <LogoutButton />
-        </nav>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
@@ -73,7 +93,7 @@ function LogoutButton() {
   const router = useRouter();
   const { logout } = useApp();
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     logout();
     router.replace('/login');
   };

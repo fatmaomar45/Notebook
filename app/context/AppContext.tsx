@@ -30,6 +30,14 @@ const NOTES_KEY = 'notebook_notes';
 const EMAIL_KEY = 'notebook_email';
 const LOGGED_IN_KEY = 'notebook_logged_in';
 
+export function formatLocalDate(date: Date | number): string {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function getNotesFromStorage(): Note[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -48,11 +56,11 @@ function getStreak(notes: Note[]): number {
   if (notes.length === 0) return 0;
 
   const dates = Array.from(
-    new Set(notes.map((n) => new Date(n.createdAt).toISOString().split('T')[0]))
+    new Set(notes.map((n) => formatLocalDate(n.createdAt)))
   ).sort().reverse();
 
-  const today = new Date().toISOString().split('T')[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const today = formatLocalDate(new Date());
+  const yesterday = formatLocalDate(Date.now() - 86400000);
 
   if (dates[0] !== today && dates[0] !== yesterday) return 0;
 
@@ -130,6 +138,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteNote = (id: string): boolean => {
+    const noteExists = notes.some((n) => n.id === id);
+    if (!noteExists) return false;
     const updated = notes.filter((n) => n.id !== id);
     setNotes(updated);
     saveNotesToStorage(updated);
@@ -143,7 +153,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const streak = getStreak(notes);
   const notesByDate = notes.reduce<Map<string, Note[]>>((map, note) => {
-    const date = new Date(note.createdAt).toISOString().split('T')[0];
+    const date = formatLocalDate(note.createdAt);
     const existing = map.get(date) || [];
     existing.push(note);
     map.set(date, existing);

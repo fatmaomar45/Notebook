@@ -24,10 +24,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex">
       <Sidebar />
-      <main className="flex-1 pl-64 p-8 min-h-screen bg-stone-50/50">
+      <main className="flex-1 md:pl-64 p-8 min-h-screen bg-stone-50/50">
         {children}
       </main>
-      <IdleTimer timeoutMs={60 * 1000} />
+      <IdleTimer timeoutMs={15 * 60 * 1000} />
     </div>
   );
 }
