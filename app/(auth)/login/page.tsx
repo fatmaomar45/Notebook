@@ -4,7 +4,9 @@ import React, { Suspense, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useApp } from '@/app/context/AppContext';
+import LoginButton from '@/app/components/login-button';
 
 export default function LoginPage() {
   return (
@@ -20,12 +22,13 @@ function LoginFlow() {
   const nextPath = searchParams.get('next') || '/';
   const reason = searchParams.get('reason');
   const { login, isLoggedIn } = useApp();
+  const { status } = useSession();
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (status === 'authenticated' || isLoggedIn) {
       router.replace(nextPath);
     }
-  }, [isLoggedIn, router, nextPath]);
+  }, [isLoggedIn, status, router, nextPath]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,7 +39,7 @@ function LoginFlow() {
   );
   const [loading, setLoading] = useState(false);
 
-  if (isLoggedIn) {
+  if (isLoggedIn || status === 'authenticated') {
     return null;
   }
 
@@ -61,6 +64,7 @@ function LoginFlow() {
 
   return (
     <div className="flex h-screen w-full bg-[#fdfaf7] text-[#3a2e2b]">
+      {/* Left Branding Panel */}
       <div className="hidden md:flex md:w-1/2 bg-[#cc9b91] flex-col justify-center items-center p-12">
         <h1 className="text-white text-6xl font-serif mb-12 italic tracking-wide">Becoming Her</h1>
         <div className="relative w-[28rem] h-[28rem] transition-transform duration-300 hover:scale-105 flex justify-center items-center">
@@ -68,6 +72,7 @@ function LoginFlow() {
         </div>
       </div>
 
+      {/* Right Login Panel */}
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
@@ -86,6 +91,7 @@ function LoginFlow() {
             <div className="mb-4 p-3 text-xs rounded-lg bg-red-50 text-red-700 border border-red-200">{error}</div>
           )}
 
+          {/* Regular Credentials Form */}
           <form onSubmit={submitCredentials} className="space-y-5">
             <div className="relative flex items-center">
               <User className="absolute left-4 w-5 h-5 text-[#c5b4b1]" />
@@ -130,6 +136,21 @@ function LoginFlow() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
+
+          {/* Luxury-Styled Divider line */}
+          <div className="relative my-8 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#eadeda]"></div>
+            </div>
+            <span className="relative bg-[#fdfaf7] px-4 text-xs font-medium uppercase tracking-widest text-[#927e7a]">
+              or
+            </span>
+          </div>
+
+          {/* Social Sign-In Area */}
+          <div className="flex justify-center w-full">
+            <LoginButton />
+          </div>
 
           <div className="text-center mt-8 text-xs text-[#927e7a]">
             Don&apos;t have an account?{' '}

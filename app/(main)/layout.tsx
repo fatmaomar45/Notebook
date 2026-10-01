@@ -2,22 +2,27 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Sidebar from '../components/sidebar';
 import IdleTimer from '../components/idle-timer';
 import { useApp } from '@/app/context/AppContext';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useApp();
+  const { status } = useSession();
   const pathname = usePathname();
   const router = useRouter();
 
+  const authed = isLoggedIn || status === 'authenticated';
+
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (status === 'loading') return;
+    if (!authed) {
       router.replace('/login?next=' + encodeURIComponent(pathname));
     }
-  }, [isLoggedIn, pathname, router]);
+  }, [authed, status, pathname, router]);
 
-  if (!isLoggedIn) {
+  if (!authed) {
     return null;
   }
 

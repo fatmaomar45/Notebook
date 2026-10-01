@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Montserrat } from "next/font/google";
 import { AppProvider } from "./context/AppContext";
+import { Providers } from './providers';
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -33,9 +34,11 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${montserrat.variable} h-full`}
     >
       <body className="min-h-full bg-white text-[#4A3B32] antialiased">
-        <AppProvider>
-          {children}
-        </AppProvider>
+        <Providers>
+          <AppProvider>
+            {children}
+          </AppProvider>
+        </Providers>
       </body>
     </html>
   );

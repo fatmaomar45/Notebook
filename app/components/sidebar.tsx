@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { signOut } from 'next-auth/react';
 import { useApp } from '@/app/context/AppContext';
 import styles from './sidebar.module.css';
 
@@ -93,8 +94,9 @@ function LogoutButton() {
   const router = useRouter();
   const { logout } = useApp();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     logout();
+    await signOut({ callbackUrl: '/login' });
     router.replace('/login');
   };
 
